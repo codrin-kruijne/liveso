@@ -1,0 +1,12 @@
+name: liveso
+title: liveso
+username:
+account: codrin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 382006
+bundleId: 1483001
+url: https://codrin.shinyapps.io/liveso/
+when: 1531764477.98534
+asMultiple: FALSE
+asStatic: FALSE
