@@ -1,11 +1,33 @@
 library(shiny)
-library(xlsx)
+library(xlsx) # change to readxl?
+library(RJSONIO)
+library(RCurl)
 library(dplyr)
+library(rvest)
 library(plotly)
+library(leaflet)
 library(countrycode)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
+  
+  # Country coordinate data
+  google_countries <- html("https://developers.google.com/public-data/docs/canonical/countries_csv")
+  countries <- google_countries %>%
+                  html_nodes("table") %>%
+                  html_table()
+  countries_latlong <- countries[[1]] %>%
+                         mutate(country = countrycode(country, "iso2c", "iso3c"))
+  ## country_box_json <- getURL("https://raw.githubusercontent.com/sandstrom/country-bounding-boxes/master/bounding-boxes.json")
+  ## country_boxes <- RJSONIO::fromJSON("https://raw.githubusercontent.com/sandstrom/country-bounding-boxes/master/bounding-boxes.json")
+  
+  # GDP data
+  gdp <- read.csv("http://databank.worldbank.org/data/reports.aspx?source=2&series=NY.GDP.PCAP.PP.CD#")
+  
+  # Footprint data
+  fpc <- read.csv("https://query.data.world/s/fccwjcou6y3ndjbngjiasf4chx46wq", header = TRUE, stringsAsFactors = FALSE)
+  fpd <- read.csv("https://query.data.world/s/ciyn5ppqmtrjq7wspwzcpyuqlbo47h", header = TRUE, stringsAsFactors = FALSE)
+  fp <- fpd %>% left_join(fpc, by = c("country_code" = "GFN.Country.Code"))
   
   # HPI data
   HPI <- read.xlsx("data/hpi-data-2016.xlsx",
@@ -29,7 +51,11 @@ shinyServer(function(input, output) {
   #  merge country data
   
   df <- SPI[c("Country", "Country.Code", "Social.Progress.Index")]
-  df_merged <- df %>% left_join(HPI[c("Country", "Happy.Planet.Index")], by = "Country")
+  df_merged <- df %>%
+                 left_join(HPI[c("Country", "Happy.Planet.Index")],
+                           by = "Country") %>%
+                 left_join(countries_latlong[c("country", "latitude", "longitude")],
+                           by = c("Country.Code" = "country"))
   
   # Create hover text
   df_merged$hover <- with(df_merged, paste(Country, '<br>',
@@ -59,25 +85,22 @@ shinyServer(function(input, output) {
   })
   
   # Country map
-  output$country_map <- renderPlotly({
+  output$country_map <- renderLeaflet({
     d <- event_data("plotly_click")
-    # light grey boundaries
-    l <- list(color = toRGB("grey"), width = 0.5)
-    
-    # specify map projection/options
-    g <- list(
-      scope = "usa",
-      showframe = FALSE,
-      showcoastlines = FALSE,
-      projection = list(type = "winkel triple")
-    )
-    
-    p <- plot_geo(data = df_merged,
-                  type = 'choropleth') %>%
-      layout(geo = g)
+    if (is.null(d)) {"Click on a country to view data"
+    }
+    else {df_points <- df_merged %>%
+                          filter(!is.na(Happy.Planet.Index) & !is.na(Social.Progress.Index)) %>%
+                          arrange(Country)
+          lat <- df_merged[d$pointNumber + 1,]$latitude
+          lon <- df_merged[d$pointNumber + 1,]$longitude
+          print(paste("Latitude", lat, "Longitude", lon))
+    }
+    m <- leaflet() %>% setView(lng = lon, lat = lat, zoom = 6)
+    m %>% addProviderTiles(providers$Esri.WorldPhysical)
   })
   
-  # Testing output click
+  # Country specific data
   
   output$country <- renderPrint({
     d <- event_data("plotly_click")

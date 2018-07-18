@@ -1,5 +1,6 @@
 library(shiny)
 library(plotly)
+library(leaflet)
 
 # Define UI for application that draws a histogram
 shinyUI(
@@ -12,8 +13,9 @@ shinyUI(
         plotlyOutput("world_map")       
       ),
       column(4,
+        h1("Country"),
         verbatimTextOutput("country"),
-        plotlyOutput("country_map")
+        leafletOutput("country_map")
       )
     ),
     fluidRow( # Country Natural Progress Indicator
@@ -24,33 +26,36 @@ shinyUI(
         h3("Evolve to Survive")
       ),
       column(2,
-        h3("Evolve to Survive")
+        h3("Adapt to Changing Conditions")
       ),
       column(2,
-        h3("Evolve to Survive")       
+        h3("Be Locally Attuned and Responsive")
       ),
       column(2,
-        h3("Evolve to Survive")
+        h3("Integrate Development wth Growth")
       ),
       column(2,
-        h3("Evolve to Survive")
+        h3("Be Resource Effcient (Materals and Energy)")
       ),
       column(2,
-        h3("Evolve to Survive")
+        h3("Do Life-Friendly Chemistry")
       )
     ),
     fluidRow(
-      h2("How does this company compare on previous indicators?")
+      h2("How does this country compare on previous indicators?")
     ),
     fluidRow( # Comparison Indicators
-      column(4, # GDP Column
+      column(3, # GDP Column
         h3("GDP")
       ),
-      column(4, # SPI Column
+      column(3, # SPI Column
         h3("Social Progress Index"),
         verbatimTextOutput("SPI")
       ),
-      column(4, # HPI Column
+      column(3, # Footprint Column
+             h3("Ecological footpint")
+      ),
+      column(3, # HPI Column
         h3("Happy Planet Index"),
         verbatimTextOutput("HPI")
       )
