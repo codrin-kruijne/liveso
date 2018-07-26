@@ -31,12 +31,14 @@ shinyUI(
                       fluidRow(
                         column(1),
                         column(10,
-                               plotOutput("index_plot")
+                          plotOutput("index_plot")
                         ),
                         column(1)
                       )),
              tabPanel("GDP",
-                      plotlyOutput("gdp_map")),
+                      fluidRow(
+                        plotlyOutput("gdp_map"))  
+                      ),
              tabPanel("Better Life"),
              tabPanel("Social Progress"),
              tabPanel("Eco Footprint"),

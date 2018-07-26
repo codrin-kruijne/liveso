@@ -114,13 +114,18 @@ shinyServer(function(input, output) {
       projection = list(type = "winkel triple")
     )
     
-    p <- plot_geo(data = world_df[c("country", "country_code", "gdp_2016")],
-                  z = ~gdp_2016,
-                  color = ~gdp_2016,
-                  text = ~paste(country, country_code, gdp_2016),
+    p <- plot_geo(data = world_df[c("country",
+                                    "country_code",
+                                    "hover",
+                                    "gdp_2016",
+                                    "geometry")],
+                  z = ~as.list(world_df$gdp_scaled),
+                  color = ~as.list(world_df$gdp_scaled),
+                  text = ~hover,
                   locations = ~country_code,
                   type = 'choropleth') %>%
-      layout(geo = g)
+          layout(geo = g)
+    p
   })
   
 })

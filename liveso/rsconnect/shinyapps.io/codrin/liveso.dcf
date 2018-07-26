@@ -5,8 +5,8 @@ account: codrin
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 382006
-bundleId: 1487500
+bundleId: 1502382
 url: https://codrin.shinyapps.io/liveso/
-when: 1531940244.87399
+when: 1532634299.43522
 asMultiple: FALSE
 asStatic: FALSE
