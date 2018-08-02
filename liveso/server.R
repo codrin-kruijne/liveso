@@ -17,12 +17,18 @@ shinyServer(function(input, output) {
   df_merged <- readRDS("data/liveso_data.rds")
   world_sp <- as(df_merged, "Spatial")
   
+  gdp_data <- readRDS("data/gdp_per_cap_data.rds")
+  gini_data <- readRDS("data/gini_data.rds")
+  hdi_data <- readRDS("data/hdi_data.rds")
+  fp_data <- readRDS("data/fp_data.rds")
+  fp_data$year <- as.numeric(fp_data$year)
+  spi_data <- readRDS("data/spi_data.rds")
+  
   # Create base map
   base_map <- world_sp %>%
                 leaflet() %>%
                 # addProviderTiles("Stamen.Watercolor", group = "Historical") %>%
                 # addProviderTiles("Esri.WorldPhysical", group = "Physical") %>%
-                # addProviderTiles("Esri.NatGeoWorldMap", group = "NatGeo") %>% 
                 addProviderTiles("OpenStreetMap.HOT", group = "Humanitarian") # %>% # https://www.hotosm.org
                 # addLayersControl(baseGroups = c("Historical", "Physical", "NatGeo", "Humanitarian"))
   
@@ -48,7 +54,7 @@ shinyServer(function(input, output) {
   })
   
   # Index plot
-  output$index_plot <- renderPlot({
+  output$index_plot <- renderPlotly({
     country_gdp <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$gdp_scaled[1], 2)
     gdp_center <- attributes(world_sp$gdp_scaled)$`scaled:center`
     gdp_scale <- attributes(world_sp$gdp_scaled)$`scaled:scale`
@@ -74,35 +80,132 @@ shinyServer(function(input, output) {
                                         country_fp,
                                         country_hpi))
     
-    ggplot(plot_data, aes(x = as.factor(description), y = value)) + geom_col()
+    ggplot(plot_data, aes(x = as.factor(description), y = value)) +
+      geom_col() +
+      ylab("Relative, normalized score (in standard deviations from the average 0)") +
+      scale_y_continuous(limits = c(-2,2))
   })
   
-  ### GDP TAB
+### GDP TAB
   
   # GDP map
-  output$gdp_map <- renderPlotly({
-    
-    # light grey boundaries
-    l <- list(color = toRGB("grey"), width = 0.5)
-    
-    # specify map projection/options
-    g <- list(
-      showframe = FALSE,
-      showcoastlines = FALSE,
-      projection = list(type = "winkel triple")
-    )
-    
-    p <- plot_geo(data = df_merged[c("country",
-                                    "country_code",
-                                    "hover",
-                                    "gdp_2016")],
-                  z = ~gdp_2016,
-                  color = ~gdp_2016,
-                  text = ~hover,
-                  locations = ~country_code,
-                  type = 'choropleth') %>%
-          layout(geo = g)
-    p
+  output$econ_world <- renderLeaflet({
+    base_map %>%
+      addPolygons(weight = 1, color = ~gdp_2016,
+                  label = ~hover,
+                  highlight = highlightOptions(weight = 5, color = "white",
+                                               bringToFront = TRUE))
   })
   
+  # Country specific data
+  
+  gdpCountry <- eventReactive(input$econ_world_click, {
+    # Get the click info like had been doing
+    click <- input$econ_world_click
+    clat <- click$lat
+    clng <- click$lng
+    
+    # Lookup country
+    countrycode(GNcountryCode(lat = clat, lng = clng)$countryCode, "iso2c", "iso3c")
+  })
+  
+  # Create common plot scale
+  
+  x_axis <- list(autotick = FALSE,
+                 ticks = "outside",
+                 range = c(1960, 2020),
+                 dtick = 5,
+                 ticklen = 5,
+                 tickwidth = 2,
+                 tickcolor = toRGB("blue")
+  )
+  
+  # GDP Plot
+  output$gdp_plot <- renderPlotly({
+
+    plot_ly(gdp_data[gdp_data$country_code == gdpCountry()[[1]], ], x = ~year, y = ~gdp_per_cap, name = gdpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_axis)
+    
+  })
+  
+  # GINI Plot
+  output$gini_plot <- renderPlotly({
+    
+    plot_ly(gini_data[gini_data$country_code == gdpCountry()[[1]], ], x = ~year, y = ~gini_avg, name = gdpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_axis)
+    
+  })
+
+### HDI TAB
+  
+  # EFP map
+  output$hdi_world <- renderLeaflet({
+    fp_map <- world_sp %>%
+      leaflet() %>%
+      addProviderTiles("Esri.NatGeoWorldMap", group = "NatGeo") %>%
+      addPolygons(weight = 1, color = ~gdp_2016, label = ~hover,
+                  highlight = highlightOptions(weight = 5, color = "white",
+                                               bringToFront = TRUE))
+    fp_map
+  })
+  
+  # Country specific data
+  
+  hdiCountry <- eventReactive(input$hdi_world_click, {
+    # Get the click info like had been doing
+    click <- input$hdi_world_click
+    print(click)
+    clat <- click$lat
+    clng <- click$lng
+    
+    # Lookup country
+    countrycode(GNcountryCode(lat = clat, lng = clng)$countryCode, "iso2c", "iso3c")
+  })
+  
+  # HDI Plot
+  output$hdi_plot <- renderPlotly({
+    
+    plot_ly(hdi_data[hdi_data$country_code == hdiCountry()[[1]], ], x = ~year, y = ~hdi, name = hdiCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_axis)
+    
+  })
+  
+  
+### SPI TAB CURRENTLY ONLY 2017 DATA OBTAINED
+
+### EFP TAB
+  
+  # EFP map
+  output$fp_world <- renderLeaflet({
+    fp_map <- world_sp %>%
+                 leaflet() %>%
+                 addProviderTiles("Esri.NatGeoWorldMap", group = "NatGeo") %>%
+                 addPolygons(weight = 1, color = ~gdp_2016, label = ~hover,
+                             highlight = highlightOptions(weight = 5, color = "white",
+                             bringToFront = TRUE))
+    fp_map
+  })
+  
+  # Country specific data
+  
+  fpCountry <- eventReactive(input$fp_world_click, {
+    # Get the click info like had been doing
+    click <- input$fp_world_click
+    print(click)
+    clat <- click$lat
+    clng <- click$lng
+    
+    # Lookup country
+    countrycode(GNcountryCode(lat = clat, lng = clng)$countryCode, "iso2c", "iso3c")
+  })
+  
+  # FP Plot
+  output$fp_plot <- renderPlotly({
+    
+    plot_ly(fp_data[fp_data$country_code == fpCountry()[[1]], ], x = ~year, y = ~fp, name = fpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_axis)
+    
+  })
+    
+### HPI TAB
 })

@@ -1,22 +1,52 @@
 # This script extracts data from original downloaded files
 # and merges them for the use in the Shiny application.
 
-library(readr)
+library(tidyverse)
 library(readxl)
-library(dplyr)
-library(rvest)
+library(httr)
 library(sf)
+library(countrycode)
 
 # Natural Earth country polygons
 ne_countries <- st_read("Sources/Natural Earth/Large scale 110m/ne_110m_admin_0_countries.shp")
 country_poly <- select(ne_countries, country_code = ISO_A3, geometry) %>%
                   mutate(bbox = list(st_bbox(geometry)))
 
-# GDP data
-GDP_per_cap <- read_csv("Sources/GDP/World Bank_ World Development Indicators_GDP_PPP_Data.csv")
-GDP_per_cap[5:16] <- lapply(GDP_per_cap[5:16], as.numeric)
+# GDP data https://datahelpdesk.worldbank.org/knowledgebase/articles/889386-developer-information-overview
+GDP_per_cap <- read_excel("Sources/GDP/GDP_API_NY.GDP.PCAP.CD_DS2_en_excel_v2_10051632.xls",
+                          sheet = "Data",
+                          range = "A4:BJ268",
+                          col_names = TRUE)
+
+GDP_per_cap <- GDP_per_cap %>%
+                 select(-c(`Indicator Name`, `Indicator Code`)) %>%
+                 rename(country = `Country Name`, country_code = `Country Code`) %>%
+                 gather(-c(country, country_code), key = "year", value = "gdp_per_cap")
+GDP_per_cap$year <- as.numeric(GDP_per_cap$year)
+
 GDP_2016 <- GDP_per_cap %>%
-              select(country = `Country Name`, country_code = `Country Code`, gdp_2016 = `2016 [YR2016]`)
+  filter(year == 2016) %>%
+  select(country, country_code, gdp_2016 = gdp_per_cap)
+
+# GINI data https://www.wider.unu.edu/database/world-income-inequality-database-wiid34
+GINI <- read_excel("Sources/UN WIID/WIID3.4_19JAN2017New.xlsx",
+                   sheet = "Sheet1",
+                   col_names = TRUE)
+# TEMPORARY FIX FOR MULTIPLE VALUES PER COUNTRY PER YEAR
+GINI <- GINI %>%
+          select(country_code = Countrycode3, year = Year, gini = Gini) %>%
+          group_by(country_code, year) %>%
+          summarize(gini_avg = mean(gini)) %>%
+          ungroup()
+
+# Human Development Index http://hdr.undp.org/en/indicators/137506#
+HDI <- read_csv("Sources/HDI/HDI export.csv",
+                col_names = TRUE,
+                skip = 1)
+HDI <- HDI %>%
+         gather(`1990`:`2015`, key = "year", value = "hdi") %>%
+         mutate(country_code = countrycode(Country, "country.name", "iso3c"))
+HDI$year <- as.numeric(HDI$year)
 
 # BLI data ### TO DO
 BLI <- read_csv("Sources/OECD BLI/OECD_BLI.csv")
@@ -31,13 +61,14 @@ SPI[1:2] <- lapply(SPI[1:2], as.factor)
 SPI_2016 <- SPI %>%
               select(country = Country, country_code = `Country Code`, spi_2016 = `Social Progress Index`)
 
-# Footprint data
-fpc <- read_csv("https://query.data.world/s/fccwjcou6y3ndjbngjiasf4chx46wq", col_names = TRUE)
-fpd <- read_csv("https://query.data.world/s/ciyn5ppqmtrjq7wspwzcpyuqlbo47h", col_names = TRUE)
-FP <- fpd %>% left_join(fpc, by = c("country_code" = "GFN Country Code"))
-FP_2014 <- FP %>%
+# Footprint data sourced through API calls
+
+fp_data <- readRDS("liveso/data/fp_api_data.rds")
+
+
+FP_2014 <- fp_data %>%
              filter(year == 2014) %>%
-             select(country_code = `ISO Alpha-3 Code`, fp_2014 = total)
+             select(country_code, fp)
 
 # HPI data
 HPI <- read_excel("Sources/HPI/hpi-data-2016.xlsx",
@@ -58,15 +89,20 @@ world_df <- country_poly %>%
 world_df <- world_df %>%
               mutate(gdp_scaled = scale(gdp_2016),
                      spi_scaled = scale(spi_2016),
-                     fp_scaled = scale(fp_2014),
+                     fp_scaled = scale(fp),
                      hpi_scaled = scale(hpi_2016))
 
 # Create hover text
 world_df$hover <- with(world_df, paste(country, '<br>',
-                                         "GDP", round(gdp_2016, 2), '<br>',
-                                         "SPI", round(spi_2016, 2), '<br>',
-                                         "FP", round(fp_2014, 2), '<br>',
+                                       "GDP", round(gdp_2016, 2), '<br>',
+                                       "SPI", round(spi_2016, 2), '<br>',
+                                       "FP", round(fp, 2), '<br>',
                                        "HPI", round(hpi_2016, 2)))
 
 # Save data for shiny application use
 saveRDS(world_df, "liveso/data/liveso_data.rds")
+saveRDS(GDP_per_cap, "liveso/data/gdp_per_cap_data.rds")
+saveRDS(GINI, "liveso/data/gini_data.rds")
+saveRDS(HDI, "liveso/data/hdi_data.rds")
+saveRDS(SPI, "liveso/data/spi_data.rds")
+saveRDS(fp_data, "liveso/data/fp_data.rds")
