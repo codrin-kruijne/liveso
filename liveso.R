@@ -48,6 +48,22 @@ HDI <- HDI %>%
          mutate(country_code = countrycode(Country, "country.name", "iso3c"))
 HDI$year <- as.numeric(HDI$year)
 
+# Well-being / happiness data
+WHR <- read_excel("Sources/WHR/WHR2018Chapter2OnlineData.xls",
+                  sheet = "Table2.1")
+WHR_2017 <- read_excel("Sources/WHR/WHR2018Chapter2OnlineData.xls",
+                       sheet = "Figure2.2",
+                       range = "A1:B157") %>%
+            rename(life_ladder_happiness = `Happiness score`, country = Country) %>%
+            add_column(year = 2018) %>%
+            select(country, year, life_ladder_happiness)
+
+WHR <- WHR %>%
+         rename(life_ladder_happiness = `Life Ladder`) %>%
+         select(country, year, life_ladder_happiness) %>%
+         bind_rows(WHR_2017) %>%
+         mutate(country_code = countrycode(country, "country.name", "iso3c"))
+
 # BLI data ### TO DO
 BLI <- read_csv("Sources/OECD BLI/OECD_BLI.csv")
 
@@ -65,10 +81,9 @@ SPI_2016 <- SPI %>%
 
 fp_data <- readRDS("liveso/data/fp_api_data.rds")
 
-
 FP_2014 <- fp_data %>%
              filter(year == 2014) %>%
-             select(country_code, fp)
+             select(country_code, reserve)
 
 # HPI data
 HPI <- read_excel("Sources/HPI/hpi-data-2016.xlsx",
@@ -89,14 +104,14 @@ world_df <- country_poly %>%
 world_df <- world_df %>%
               mutate(gdp_scaled = scale(gdp_2016),
                      spi_scaled = scale(spi_2016),
-                     fp_scaled = scale(fp),
+                     fp_scaled = scale(reserve),
                      hpi_scaled = scale(hpi_2016))
 
 # Create hover text
 world_df$hover <- with(world_df, paste(country, '<br>',
                                        "GDP", round(gdp_2016, 2), '<br>',
                                        "SPI", round(spi_2016, 2), '<br>',
-                                       "FP", round(fp, 2), '<br>',
+                                       "FP", round(reserve, 2), '<br>',
                                        "HPI", round(hpi_2016, 2)))
 
 # Save data for shiny application use
@@ -104,5 +119,6 @@ saveRDS(world_df, "liveso/data/liveso_data.rds")
 saveRDS(GDP_per_cap, "liveso/data/gdp_per_cap_data.rds")
 saveRDS(GINI, "liveso/data/gini_data.rds")
 saveRDS(HDI, "liveso/data/hdi_data.rds")
+saveRDS(WHR, "liveso/data/whr_data.rds")
 saveRDS(SPI, "liveso/data/spi_data.rds")
 saveRDS(fp_data, "liveso/data/fp_data.rds")

@@ -1,9 +1,20 @@
 # This script creates the user interface for the Shiny application.
 
 library(shiny)
-library(shinythemes)
+library(shinythemes) 
 library(plotly)
 library(leaflet)
+
+# Bootswatch theme component generators https://bootswatch.com/united/
+
+generateCard <- function(type, header, title, message){
+  # styles: primary, secondary, success, danger, warning, info, light, dark
+  tags$div(class = paste0("card border-", type, " mb-3"), style = "max-width: 20rem;",
+           tags$div(class="card-header", header),
+           tags$div(class = "card-body",
+                    tags$h4(class = "card-title", title),
+                    tags$p(class = "card-text", message)))
+}
 
 # Define UI for application that draws a histogram
 shinyUI(
@@ -14,7 +25,7 @@ shinyUI(
                         column(1),
                         column(10, align = "left",
                                
-                               h1("Towards a global Natural Progress Index"),
+                               h1("The evolution of progress metrics"),
                                p("Governments have been using GDP as a monetary measure to inform decision making and guage results. While increasing economic results has brought a lot of benefits, we are being confronted with detrimental side effects. Alternative performance indexes have been developed to provede more nuanced views. This site gives you a view of several metrics and explores a new one that is based on strategies from nature.")
                                ),
                         column(1)
@@ -33,16 +44,18 @@ shinyUI(
                       fluidRow(
                         column(1),
                         column(10,
-                          plotlyOutput("index_plot")
+                          plotlyOutput("metrics_plot")
                         ),
                         column(1)
                       )),
              navbarMenu("Exploration",
-                        tabPanel("Index evolution",
+                        tabPanel("Evolution of metrics",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Index timeline")),
+                                          h1("Index timeline"),
+                                          generateCard("success", "HEADER", "Title", "message"),
+                                          p(class = "warning", "This should be WARNING text.")),
                                    column(1)
                                  )),
                         tabPanel("Gross Domestic Product",
@@ -61,7 +74,8 @@ shinyUI(
                                    column(10,
                                           h1("Human Development Index"),
                                           leafletOutput("hdi_world"),
-                                          plotlyOutput("hdi_plot")),
+                                          plotlyOutput("hdi_plot"),
+                                          plotlyOutput("hdi_fp_plot")),
                                    column(1)
                                  )),
                         # tabPanel("Better Life Index",
@@ -71,37 +85,49 @@ shinyUI(
                         #                   h1("Better Life Index")),
                         #            column(1)
                         #          )),
-                        tabPanel("Social Progress Index",
-                                 fluidRow(
-                                   column(1),
-                                   column(10,
-                                          h1("Social Progress Idex")),
-                                   column(1)
-                                 )),
+                        # tabPanel("Social Progress Index",
+                        #          fluidRow(
+                        #            column(1),
+                        #            column(10,
+                        #                   h1("Social Progress Index")),
+                        #            column(1)
+                        #          )),
                         tabPanel("Ecological Footprint",
                                  fluidRow(
                                    column(1),
                                    column(10,
                                           h1("Ecological Footprint"),
                                           leafletOutput("fp_world"),
-                                          plotlyOutput("fp_plot")),
+                                          plotlyOutput("fp_plot"),
+                                          plotlyOutput("fp_wh_plot")),
                                    column(1)
                                  )),
-                        tabPanel("Happy Planet Index",
+                        tabPanel("Happiness",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Happy Planet Index")),
+                                          h1("Happiness"),
+                                          leafletOutput("h_world"),
+                                          plotlyOutput("h_plot"),
+                                          plotlyOutput("h_wb_plot")),
                                    column(1)
                                  )),
-                        tabPanel("Index insights",
+                        # tabPanel("Happy Planet Index",
+                        #          fluidRow(
+                        #            column(1),
+                        #            column(10,
+                        #                   h1("Happy Planet Index")),
+                        #            column(1)
+                        #          )),
+                        tabPanel("Metrics insights",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Index insights"),
+                                          h1("Metrics insights"),
                                           h2("From human-centric to integrated"),
                                           h2("From local to global"),
-                                          h2("From short term to (re)generative capacity")),
+                                          h2("From moment to beyond generations"),
+                                          h2("From state to (re)generative capacity")),
                                    column(1)
                                  ))
                         ), # End of navbarMenu "Research"
@@ -195,6 +221,9 @@ shinyUI(
                                           h3("Human Development Index"),
                                           p("HDI data was obtained from the United Nations Development Programme Human Development Reports."),
                                           tags$a(href = "http://hdr.undp.org/en/humandev", tags$img(src = "HDI-f-logo.png")),
+                                          h3("World Happiness Report"),
+                                          p("Happiness Data was obtained from the World Happiness Report 2018."),
+                                          tags$a(href = "http://worldhappiness.report/ed/2018/", tags$img(src = "whr-cover-2018.png")),
                                           h3("Social Progress Index"),
                                           tags$a(href = "http://www.socialprogressindex.com", tags$img(src = "SPI_logo_for_web_footer_2.png")),
                                           h3("Ecological Footprint"),

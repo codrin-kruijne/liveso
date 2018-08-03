@@ -20,11 +20,12 @@ shinyServer(function(input, output) {
   gdp_data <- readRDS("data/gdp_per_cap_data.rds")
   gini_data <- readRDS("data/gini_data.rds")
   hdi_data <- readRDS("data/hdi_data.rds")
+  whr_data <- readRDS("data/whr_data.rds")
   fp_data <- readRDS("data/fp_data.rds")
   fp_data$year <- as.numeric(fp_data$year)
   spi_data <- readRDS("data/spi_data.rds")
   
-  # Create base map
+  # Create base map https://leaflet-extras.github.io/leaflet-providers/preview/
   base_map <- world_sp %>%
                 leaflet() %>%
                 # addProviderTiles("Stamen.Watercolor", group = "Historical") %>%
@@ -53,38 +54,130 @@ shinyServer(function(input, output) {
       countrycode(GNcountryCode(lat = clat, lng = clng)$countryCode, "iso2c", "iso3c")
   })
   
-  # Index plot
-  output$index_plot <- renderPlotly({
-    country_gdp <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$gdp_scaled[1], 2)
+  # Metrix plot
+  output$metrics_plot <- renderPlotly({
+    country_gdp <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$gdp_2016, 2)
+    scaled_gdp <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$gdp_scaled[1], 2)
     gdp_center <- attributes(world_sp$gdp_scaled)$`scaled:center`
     gdp_scale <- attributes(world_sp$gdp_scaled)$`scaled:scale`
     
-    country_spi <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$spi_scaled[1], 2)
+    country_spi <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$spi_2016, 2)
+    scaled_spi <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$spi_scaled[1], 2)
     spi_center <- attributes(world_sp$spi_scaled)$`scaled:center`
     spi_scale <- attributes(world_sp$spi_scaled)$`scaled:scale`
     
-    country_fp <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$fp_scaled[1], 2)
+    scaled_fp <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$fp_scaled[1], 2)
+    country_fp <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$reserve, 2)
     fp_center <- attributes(world_sp$fp_scaled)$`scaled:center`
     fp_scale <- attributes(world_sp$fp_scaled)$`scaled:scale`
     
-    country_hpi <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$hpi_scaled[1], 2)
+    
+    country_hpi <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$hpi_2016, 2)
+    scaled_hpi <- round(world_sp[world_sp$country_code == countrySelected()[[1]],]$hpi_scaled[1], 2)
     hpi_center <- attributes(world_sp$hpi_scaled)$`scaled:center`
     hpi_scale <- attributes(world_sp$hpi_scaled)$`scaled:scale`
     
-    plot_data <- data_frame("description" = c("Country GDP",
-                                              "Country SPI",
-                                              "Country FP",
-                                              "Country HPI"),
-                            "value" = c(country_gdp,
-                                        country_spi,
-                                        country_fp,
-                                        country_hpi))
+    metrics_data <- data_frame("metric" = c("GDP",
+                                            "SPI",
+                                            "EFP",
+                                            "HPI"),
+                               "scaled" = c(scaled_gdp,
+                                            scaled_spi,
+                                            scaled_fp,
+                                            scaled_hpi),
+                               "absolute" = c(country_gdp,
+                                              country_spi,
+                                              country_fp,
+                                              country_hpi))
+  
+    print(metrics_data)
     
-    ggplot(plot_data, aes(x = as.factor(description), y = value)) +
-      geom_col() +
-      ylab("Relative, normalized score (in standard deviations from the average 0)") +
-      scale_y_continuous(limits = c(-2,2))
+    # ggplot(metrics_data, aes(x = as.factor(description), y = value)) +
+    #   geom_col() +
+    #   ylab("Relative, normalized score (in standard deviations from the average 0)") +
+    #   scale_y_continuous(limits = c(-2,2))
+    
+    plot_ly(metrics_data, x = ~metric, y = ~scaled, type = "bar",
+            marker = list(color = c("blue", # GDP
+                                    "red", # SPI
+                                    ifelse(metrics_data[metrics_data$metric == "EFP", ]$absolute > 0, "green", "red"), # EFP
+                                    "yellow"))) %>% # HPI
+      layout(yaxis = list(range = c(-2,2)))
+    
   })
+
+### Common metric axes
+  
+  # X-axis: years
+  
+  x_years_axis <- list(autotick = FALSE,
+                       ticks = "outside",
+                       range = c(1960, 2020),
+                       dtick = 10,
+                       ticklen = 5,
+                       tickwidth = 2,
+                       tickcolor = toRGB("blue")
+  )
+  
+  # Y-axis: GDP
+
+  y_gdp_axis <- list(title = "Gross Domestic Product per capita",
+                     autotick = FALSE,
+                     ticks = "outside",
+                     range = c(30, 200000),
+                     dtick = 25000,
+                     ticklen = 5,
+                     tickwidth = 2,
+                     tickcolor = toRGB("blue")
+  )
+  
+  # Y-axis: GINI
+  
+  y_gini_axis <- list(title = "Equality (100 - GINI index)",
+                      autotick = FALSE,
+                      ticks = "outside",
+                      range = c(25, 85), # based on min/max values out of 0-10 scale.
+                      dtick = 10,
+                      ticklen = 5,
+                      tickwidth = 2,
+                      tickcolor = toRGB("blue")
+  )
+  
+  # Y-axis: HDI
+  
+  y_hdi_axis <- list(title = "Human Development Index",
+                      autotick = FALSE,
+                      ticks = "outside",
+                      range = c(0, 1), # based on min/max values out of 0-10 scale.
+                      dtick = 0.1,
+                      ticklen = 5,
+                      tickwidth = 2,
+                      tickcolor = toRGB("blue")
+  )
+  
+  # Y-axis: EFP
+  
+  y_efp_axis <- list(title = "Biocapacity reserve (Biocapacity - Consumption)",
+                     autotick = FALSE,
+                     ticks = "outside",
+                     range = c(-10, 25), # based on min/max values out of 0-10 scale.
+                     dtick = 5,
+                     ticklen = 5,
+                     tickwidth = 2,
+                     tickcolor = toRGB("blue")
+  )
+  
+  # Y-axis: H
+
+  y_happiness_axis <- list(title = "Happiness (on a scale from 1-10)",
+                           autotick = FALSE,
+                           ticks = "outside",
+                           range = c(2, 9), # based on min/max values out of 0-10 scale.
+                           dtick = 1,
+                           ticklen = 5,
+                           tickwidth = 2,
+                           tickcolor = toRGB("blue")
+  )
   
 ### GDP TAB
   
@@ -109,36 +202,25 @@ shinyServer(function(input, output) {
     countrycode(GNcountryCode(lat = clat, lng = clng)$countryCode, "iso2c", "iso3c")
   })
   
-  # Create common plot scale
-  
-  x_axis <- list(autotick = FALSE,
-                 ticks = "outside",
-                 range = c(1960, 2020),
-                 dtick = 5,
-                 ticklen = 5,
-                 tickwidth = 2,
-                 tickcolor = toRGB("blue")
-  )
-  
   # GDP Plot
   output$gdp_plot <- renderPlotly({
 
     plot_ly(gdp_data[gdp_data$country_code == gdpCountry()[[1]], ], x = ~year, y = ~gdp_per_cap, name = gdpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
-      layout(xaxis = x_axis)
+      layout(xaxis = x_years_axis, yaxis = y_gdp_axis)
     
   })
   
   # GINI Plot
   output$gini_plot <- renderPlotly({
     
-    plot_ly(gini_data[gini_data$country_code == gdpCountry()[[1]], ], x = ~year, y = ~gini_avg, name = gdpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
-      layout(xaxis = x_axis)
+    plot_ly(gini_data[gini_data$country_code == gdpCountry()[[1]], ], x = ~year, y = ~(100 - gini_avg), name = gdpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_years_axis, yaxis = y_gini_axis)
     
   })
 
 ### HDI TAB
   
-  # EFP map
+  # HDI map
   output$hdi_world <- renderLeaflet({
     fp_map <- world_sp %>%
       leaflet() %>%
@@ -166,7 +248,15 @@ shinyServer(function(input, output) {
   output$hdi_plot <- renderPlotly({
     
     plot_ly(hdi_data[hdi_data$country_code == hdiCountry()[[1]], ], x = ~year, y = ~hdi, name = hdiCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
-      layout(xaxis = x_axis)
+      layout(xaxis = x_years_axis, yaxis = y_hdi_axis)
+    
+  })
+  
+  # FP Plot
+  output$hdi_fp_plot <- renderPlotly({
+    
+    plot_ly(fp_data[fp_data$country_code == hdiCountry()[[1]], ], x = ~year, y = ~reserve, name = hdiCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_years_axis, yaxis = y_efp_axis)
     
   })
   
@@ -202,10 +292,64 @@ shinyServer(function(input, output) {
   # FP Plot
   output$fp_plot <- renderPlotly({
     
-    plot_ly(fp_data[fp_data$country_code == fpCountry()[[1]], ], x = ~year, y = ~fp, name = fpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
-      layout(xaxis = x_axis)
+    plot_ly(fp_data[fp_data$country_code == fpCountry()[[1]], ],
+            x = ~year, y = ~BiocapPerCap,
+            name = "Bio capacity", text = ~paste0(ifelse(reserve > 0, "Deficit", "Reserce")),
+            type = "scatter", mode = "lines+markers") %>%
+      add_trace(y = ~EFConsPerCap, name = "Consumption",
+                mode = "lines+markers", fill = "tozeroy") %>%
+      add_trace(y = ~reserve, name = "Bio reserve", mode = "lines+markers") %>%
+      layout(xaxis = x_years_axis, yaxis = y_efp_axis)
+    
+  })
+  
+  # FP-H Plot
+  output$fp_wh_plot <- renderPlotly({
+    
+    plot_ly(whr_data[whr_data$country_code == fpCountry()[[1]], ], x = ~year, y = ~life_ladder_happiness, name = fpCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_years_axis, yaxis = y_happiness_axis)
     
   })
     
-### HPI TAB
+### H TAB
+  
+  # H map
+  output$h_world <- renderLeaflet({
+    fp_map <- world_sp %>%
+      leaflet() %>%
+      addProviderTiles("Esri.NatGeoWorldMap", group = "NatGeo") %>%
+      addPolygons(weight = 1, color = ~gdp_2016, label = ~hover,
+                  highlight = highlightOptions(weight = 5, color = "white",
+                                               bringToFront = TRUE))
+    fp_map
+  })
+  
+  # Country specific data
+  
+  hCountry <- eventReactive(input$h_world_click, {
+    # Get the click info like had been doing
+    click <- input$h_world_click
+    print(click)
+    clat <- click$lat
+    clng <- click$lng
+    
+    # Lookup country
+    countrycode(GNcountryCode(lat = clat, lng = clng)$countryCode, "iso2c", "iso3c")
+  })
+  
+  # H Plot
+  output$h_plot <- renderPlotly({
+    
+    plot_ly(whr_data[whr_data$country_code == hCountry()[[1]], ], x = ~year, y = ~life_ladder_happiness, name = hCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_years_axis, yaxis = y_happiness_axis)
+    
+  })
+  
+  # X Plot
+  output$h_fp_plot <- renderPlotly({
+    
+    plot_ly(fp_data[fp_data$country_code == hCountry()[[1]], ], x = ~year, y = ~fp, name = hCountry()[[1]], type = "scatter", mode = "lines+markers") %>%
+      layout(xaxis = x_years_axis)
+    
+  })
 })

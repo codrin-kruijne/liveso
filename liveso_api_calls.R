@@ -38,8 +38,8 @@ for (link in fp_req_links){
 
 fp_data <- fp_data %>%
   spread(record, value) %>%
-  mutate(fp = BiocapPerCap - EFConsPerCap) %>%
+  mutate(reserve = BiocapPerCap - EFConsPerCap) %>%
   mutate(country_code = countrycode(countryName, "country.name", "iso3c")) %>%
-  filter(!is.na(fp))
+  filter(!is.na(reserve))
 
 saveRDS(fp_data, "liveso/data/fp_api_data.rds")
