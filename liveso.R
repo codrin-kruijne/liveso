@@ -6,6 +6,10 @@ library(readxl)
 library(httr)
 library(sf)
 library(countrycode)
+library(data.world)
+
+# Data.World connection
+data.world::set_config(save_config(auth_token = DW_RW_TOKEN))
 
 # Natural Earth country polygons
 ne_countries <- st_read("Sources/Natural Earth/Large scale 110m/ne_110m_admin_0_countries.shp")

@@ -5,37 +5,46 @@ library(shinythemes)
 library(plotly)
 library(leaflet)
 
-# Bootswatch theme component generators https://bootswatch.com/united/
+# Bootswatch theme component generators https://bootswatch.com/3/united/
 
-generateCard <- function(type, header, title, message){
-  # styles: primary, secondary, success, danger, warning, info, light, dark
-  tags$div(class = paste0("card border-", type, " mb-3"), style = "max-width: 20rem;",
-           tags$div(class="card-header", header),
-           tags$div(class = "card-body",
-                    tags$h4(class = "card-title", title),
-                    tags$p(class = "card-text", message)))
+generateAlert <- function(type, message){
+  # Types: warning (yellow), danger (red), success (green), info (blue)
+  tags$div(class = paste0("alert alert-dismissable alert-", type), tags$button(type = "button", class = "close", `data-dismiss` = "alert", "x"), message)
+}
+
+generatePanel <- function(type, title, content){
+  # Types: primary (orange), success (green), danger (red), warning (yellow), info (blue)
+  tags$div(class = paste0("panel panel-", type),
+           tags$div(class="panel-heading",
+                    tags$h3(class = "panel-title", title)),
+           tags$div(class = "panel-body", content))
+}
+
+generateBlockquote <- function(words, origin){
+  tags$blockquote(class = "blockquote-reverse", tags$p(words), tags$small(origin))
 }
 
 # Define UI for application that draws a histogram
 shinyUI(
   navbarPage(theme = shinytheme("united"),
+             position = "fixed-top",
+             tags$head(tags$style(type="text/css", "body {padding-top: 70px;}")),
+             selected = "Overview",
              title = "Natural progress",
              tabPanel("Overview",
-                      fluidRow(align="center", # World map selector and focus country
+                      fluidRow(align = "center", # World map selector and focus country
                         column(1),
                         column(10, align = "left",
                                
-                               h1("The evolution of progress metrics"),
-                               p("Governments have been using GDP as a monetary measure to inform decision making and guage results. While increasing economic results has brought a lot of benefits, we are being confronted with detrimental side effects. Alternative performance indexes have been developed to provede more nuanced views. This site gives you a view of several metrics and explores a new one that is based on strategies from nature.")
-                               ),
+                               h1("The evolution of measuring progress"),
+                               p("Governments have been using GDP as a monetary measure to inform decision making and guage results. While increasing economic results has brought a lot of benefits, we are being confronted with detrimental side effects. Alternative performance indexes have been developed to provede more nuanced views. This site gives you a view of several metrics and explores a new one that is based on strategies from nature.")),
                         column(1)
                       ),
                       fluidRow(align = "center", # Selector world map
                         column(1),
                         column(10, 
-                               p("Select a country to explore more measures"),
-                               leafletOutput("leaflet_world")
-                        ),
+                               generateAlert("info", "Click a country to see some of its scores."),
+                               leafletOutput("leaflet_world")),
                         column(1)
                       ),
                       fluidRow(align = "center", # Comparison Indicators
@@ -44,19 +53,28 @@ shinyUI(
                       fluidRow(
                         column(1),
                         column(10,
-                          plotlyOutput("metrics_plot")
-                        ),
+                          plotlyOutput("metrics_plot")),
                         column(1)
                       )),
              navbarMenu("Exploration",
                         tabPanel("Evolution of metrics",
-                                 fluidRow(
-                                   column(1),
-                                   column(10,
-                                          h1("Index timeline"),
-                                          generateCard("success", "HEADER", "Title", "message"),
-                                          p(class = "warning", "This should be WARNING text.")),
-                                   column(1)
+                                 fluidRow(align = "center",
+                                   column(3),
+                                   column(6,
+                                          h1("A timeline of indeces"),
+                                          p("Over thelast decades several proposalshave emerged to improve the way of measuring societal progress."),
+                                          generatePanel("info", "Measuring Economy", "Gros Domstic Product"),
+                                          tags$i(class="glyphicon glyphicon-arrow-down"), tags$br(), tags$br(),
+                                          generatePanel("warning", "Human Progress", "Human Development Index"),
+                                          tags$i(class="glyphicon glyphicon-arrow-down"), tags$br(), tags$br(),
+                                          generatePanel("danger", "Social Imperative", "Social Progress Index"),
+                                          tags$i(class="glyphicon glyphicon-arrow-down"), tags$br(), tags$br(),
+                                          generatePanel("success", "Imact on Nature", "Ecological Footprint"),
+                                          tags$i(class="glyphicon glyphicon-arrow-down"), tags$br(), tags$br(),
+                                          generatePanel("warning", "Happiness and well-being", "Quality of life"),
+                                          tags$i(class="glyphicon glyphicon-arrow-down"), tags$br(), tags$br(),
+                                          generatePanel("primary", "Natural progress", "Quality oflife for all organisms, now ad in future")),
+                                   column(3)
                                  )),
                         tabPanel("Gross Domestic Product",
                                  fluidRow(
@@ -106,7 +124,7 @@ shinyUI(
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Happiness"),
+                                          h1("Happiness and well-being"),
                                           leafletOutput("h_world"),
                                           plotlyOutput("h_plot"),
                                           plotlyOutput("h_wb_plot")),
@@ -145,45 +163,65 @@ shinyUI(
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Evolve to survive")),
+                                          h1("Evolve to survive"),
+                                          h2("Replicate Strategies that Work"),
+                                          h2("Integrate the Unexpected"),
+                                          h2("Reshuffle Information")),
                                    column(1)
                                  )),
                         tabPanel("Adapt to Changing Conditions",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Adapt to changing conditions")),
+                                          h1("Adapt to changing conditions"),
+                                          h2("Incorporate Diversity"),
+                                          h2("Maintain Integrity Through Self-Renewal"),
+                                          h2("Embody Resilience Through Variation, Redundancy, and Decentralization")),
                                    column(1)
                                  )),
                         tabPanel("Be Locally Attuned and Responsive",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Be locally attuned and responsive")),
+                                          h1("Be locally attuned and responsive"),
+                                          h2("Leverage Cyclical Processes"),
+                                          h2("Use Readily Available Materials and Energy"),
+                                          h2("Use Feedbacl Loops"),
+                                          h2("Cultivate Cooperative Relationships")),
                                    column(1)
                                  )),
                         tabPanel("Integrate Development wth Growth",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Integrate Development with Growth")),
+                                          h1("Integrate Development with Growth"),
+                                          h2("Self-Organize"),
+                                          h2("Build from the Bottom-Up"),
+                                          h2("Combine Modular and Nested Components")),
                                    column(1)
                                  )),
                         tabPanel("Be Resource Effcient (Materals and Energy)",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Be resource Efficient (Materials and Energy)")),
+                                          h1("Be resource Efficient (Materials and Energy)"),
+                                          h2("Use Low Energy Processes"),
+                                          h2("Use Multi-Functional Design"),
+                                          h2("Recycle All Materials"),
+                                          h2("Fit Form to Function")),
                                    column(1)
                                  )),
                         tabPanel("Do Life-Friendly Chemistry",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Do Life-Friendly Chemistry")),
+                                          h1("Do Life-Friendly Chemistry"),
+                                          h2("Break Down Products into Benign Constituents"),
+                                          h2("Build Selectively with a Small Subset of Elements"),
+                                          h2("Do Chemistry in Water")),
                                    column(1)
                                  ))
-             ),
+             ), # End of navbarMenu "Life's Principles"
              navbarMenu("About",
                         tabPanel("Objectives",
                                  fluidRow(
@@ -227,7 +265,7 @@ shinyUI(
                                           h3("Social Progress Index"),
                                           tags$a(href = "http://www.socialprogressindex.com", tags$img(src = "SPI_logo_for_web_footer_2.png")),
                                           h3("Ecological Footprint"),
-                                          tags$a(href = "http://data.footprintnetwork.org/", tags$img(src = "Global Footprint Network-logo-blue.svg")),
+                                          tags$a(href = "http://data.footprintnetwork.org/", tags$img(src = "Global Footprint Network-logo-blue.svg", width = "250px")),
                                           h3("Happy Planet Index"),
                                           tags$a(href = "https://happyplanetindex.org", tags$img(src = "Happy Planet Index-Logo.png")),
                                           h2("Data completeness"),
@@ -243,11 +281,17 @@ shinyUI(
                                    column(1),
                                    column(10,
                                           h1("Design Choices"),
+                                          p("The way data is presented can influence very much how it is perceived. Our aim is to show you the objective data as well as argue for new ways of measuring progress that address som of the limitations of previous efforts. We link back to all original sources and share the code we created and data gathered as open source resources to be scrutinized and improved upon. We welcome your "), tags$a(href="mailto:codrin@biomimicryNL.org", "feedback."),
                                           h2("Map projections"),
+                                          p("Historically the way the world has been projected on maps (the way you represent the surface of a 3D sphere on a 2D piece of paper, has biased the way people looking at the world, e.g. underrepresenting the size of Africa. Maybe we should use the"), tags$a(href="https://en.wikipedia.org/wiki/Winkel_tripel_projection", "Winkel Triple Projection."),
                                           h2("Navigation"),
+                                          p("We welcome the visitor with a current state of the world that will show the to be developed index results and when a country is selected the comparison on previous metrics. From there the background of the previous metrics can be explored as well as the considerations made for developing the Natural Progress Index."),
                                           h2("Choropleth colors"),
+                                          p(" Should we use colors on a continuous scale that allows comparison between countries, or on a diverging scale to give a sense of good or problematic state?"),
                                           h2("Inicator comparisons"),
-                                          h2("Plot scales")),
+                                          p("Should we compare absolute numbers or relative (normalized) scores? How do we help people to make sense of the units? To what degree do we want to instill a sense of (subjective) urgency?"),
+                                          h2("Plot scales"),
+                                          p("Are people biased to see rising graph as something good? How to deal with that?")),
                                    column(1)
                                  )),
                         tabPanel("Open Source",
@@ -256,19 +300,44 @@ shinyUI(
                                    column(10,
                                           h1("Open Source"),
                                           h2("Code on GitHub"),
-                                          p("The code for the R Shiny app is available on GitHub:"),
-                                          a(href="https://github.com/codrin-kruijne/liveso", "Get it here!"),
+                                          p("The code for the data gathering and wrangling and R Shiny app is available on GitHub:"),
+                                          tags$br(),
+                                          tags$br(),
+                                          tags$a(href = "https://github.com/codrin-kruijne/liveso", tags$img(src = "GitHub-Mark-120px-plus.png", width = "120")),
                                           h2("Data on ..."),
-                                          p("To be determined how to make compiled data avialable ...")),
+                                          p("We are exploring the use of Data.World to make data gathered available"),
+                                          tags$a(href = "https://data.world/", tags$img(src = "DataWorld-logo.png", width = "120"))),
                                    column(1)
                                  )),
                         tabPanel("Developers",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Developers")),
+                                          h1("Developers"),
+                                          tags$p("This project has been initiated by Codrin Kruijne as a firt project for a Data Science portfolio."),
+                                          tags$a(href = "https://www.linkedin.com/in/codrinkruijne/", tags$img(src = "LinkedInCodrinKruijne.PNG", width = "300")),
+                                          tags$br(),
+                                          tags$br(),
+                                          tags$a(href = "https://www.datacamp.com/profile/codrinkruijne", tags$img(src = "DataCampLogo.png", width = "252")),
+                                          generateBlockquote("O so wise words", "o wise one")),
                                    column(1)
                                  ))
-                        ) # end of navbarMenu "About"
+                        ), # end of navbarMenu "About",
+             footer = fluidRow(align = "center",
+                               tags$br(), tags$br(),
+                               tags$div(class = "progress", tags$div(class = "progress-bar", style = "width: 100%;")),
+                               column(3,
+                                      h4("Objective"),
+                                      p("blablabla")),
+                               column(3,
+                                      h4("Results"),
+                                      p("blablabla")),
+                               column(3,
+                                      h4("Contribute"),
+                                      p("blablabla")),
+                               column(3,
+                                      h4("Connect"),
+                                      p("blablabla"))
+             )
   ) # End of navbarPage
 )
