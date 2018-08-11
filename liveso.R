@@ -9,7 +9,7 @@ library(countrycode)
 library(data.world)
 
 # Data.World connection
-data.world::set_config(save_config(auth_token = DW_RW_TOKEN))
+data.world::set_config(save_config(auth_token = "DW_ADMIN_TOKEN"))
 
 # Natural Earth country polygons
 ne_countries <- st_read("Sources/Natural Earth/Large scale 110m/ne_110m_admin_0_countries.shp")
@@ -126,3 +126,16 @@ saveRDS(HDI, "liveso/data/hdi_data.rds")
 saveRDS(WHR, "liveso/data/whr_data.rds")
 saveRDS(SPI, "liveso/data/spi_data.rds")
 saveRDS(fp_data, "liveso/data/fp_data.rds")
+
+# Data.World Publishing trial
+# write.csv(fp_data, "dataworld_liveso.csv")
+# file_request <- file_create_request(file_name = "liveso.csv",
+#                                     url = "dataworld_liveso.csv",
+#                                     description = "liveso data merged")
+# replace_request <- dataset_replace_request(title = "liveso dataset title",
+#                                            visibility = "PRIVATE",
+#                                            description = "R description",
+#                                            summary = "R Studio summary",
+#                                            license_string = "Other",
+#                                            files = list(file_request))
+# replace_dataset(dataset = "https://data.world/codrin/natural-progress", replace_request)
