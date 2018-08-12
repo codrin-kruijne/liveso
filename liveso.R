@@ -69,7 +69,7 @@ WHR <- WHR %>%
          mutate(country_code = countrycode(country, "country.name", "iso3c"))
 
 # BLI data ### TO DO
-BLI <- read_csv("Sources/OECD BLI/OECD_BLI.csv")
+# BLI <- read_csv("Sources/OECD BLI/OECD_BLI.csv")
 
 # SPI data
 SPI <- read_excel("Sources/SPI/SPI 2017 Results.xlsx",
@@ -95,8 +95,38 @@ HPI <- read_excel("Sources/HPI/hpi-data-2016.xlsx",
                   range = "B6:O146",
                   trim_ws = TRUE)
 HPI[2:3] <- lapply(HPI[2:3], as.factor)
+HPI <- HPI %>%
+        mutate(life_exp_scaled = scale(`Average Life \r\nExpectancy`),
+               well_being_scaled = scale(`Average Wellbeing\r\n(0-10)`),
+               ineq_outcomes_scaled = scale(`Inequality of Outcomes`),
+               footprint_scaled = scale(`Footprint\r\n(gha/capita)`),
+               hpi_scaled = scale(`Happy Planet Index`))
+
+
 HPI_2016 <- HPI %>% select(country = Country, hpi_2016 = `Happy Planet Index`)
 
+# Sustainability Development Goals Index
+SDG_2016 <- read_excel("Sources/SDG/sdg_index_and_dashboards_data_2016.xlsx",
+                       sheet = "Sheet1",
+                       range = "A1:CK150",
+                       trim_ws = TRUE)
+SDG_2017 <- read_excel("Sources/SDG/sdgi2017-data-web-final.xlsx",
+                       sheet = "SDG INDEX 2017 DATA",
+                       range = "A1:CK150",
+                       trim_ws = TRUE)
+SDG_2018 <- read_excel("Sources/SDG/SDG_Global_Index_Data_2018.xlsx",
+                       sheet = "Sheet1",
+                       range = "A1:IK194",
+                       trim_ws = TRUE)
+
+SDG <- SDG_2016 %>%
+        select(ID, CountryName, "2016" = SDGI_Score) %>%
+        left_join(SDG_2017 %>% select(ISO3, "2017" = `Global Index Score (0-100)`), by = c("ID" = "ISO3")) %>%
+        left_join(SDG_2018 %>% select(id, "2018" = `Global Index Score (0-100): 2018 version`), by = c("ID" = "id")) %>%
+        gather("2016":"2018", key = "year", value = "score")
+SDG$year <- as.numeric(SDG$year)
+
+# Measuring SHared Value? https://www.fsg.org/publications/measuring-shared-value
 # Merge country data
 world_df <- country_poly %>%
               inner_join(GDP_2016) %>%
@@ -118,6 +148,15 @@ world_df$hover <- with(world_df, paste(country, '<br>',
                                        "FP", round(reserve, 2), '<br>',
                                        "HPI", round(hpi_2016, 2)))
 
+## DIRTY MERGE JUST FOR TESTING
+full_df <- country_poly %>%
+            full_join(GDP_per_cap, by = c("country_code")) %>%
+            full_join(GINI, by = c("country_code", "year")) %>%
+            full_join(HDI %>% select(country_code, year, hdi), by = c("country_code", "year")) %>%
+            full_join(fp_data %>% select(country_code, year, BiocapPerCap, EFConsPerCap, reserve), by = c("country_code", "year")) %>%
+            full_join(WHR %>% select(country_code, year, life_ladder_happiness), by = c("country_code", "year")) %>%
+            full_join(SDG %>% select(ID, year, score), by = c("country_code" = "ID", "year"))
+
 # Save data for shiny application use
 saveRDS(world_df, "liveso/data/liveso_data.rds")
 saveRDS(GDP_per_cap, "liveso/data/gdp_per_cap_data.rds")
@@ -125,9 +164,12 @@ saveRDS(GINI, "liveso/data/gini_data.rds")
 saveRDS(HDI, "liveso/data/hdi_data.rds")
 saveRDS(WHR, "liveso/data/whr_data.rds")
 saveRDS(SPI, "liveso/data/spi_data.rds")
+saveRDS(HPI, "liveso/data/hpi_data.rds")
+saveRDS(SDG, "liveso/data/sdg_data.rds")
 saveRDS(fp_data, "liveso/data/fp_data.rds")
 
 # Data.World Publishing trial
+
 # write.csv(fp_data, "dataworld_liveso.csv")
 # file_request <- file_create_request(file_name = "liveso.csv",
 #                                     url = "dataworld_liveso.csv",

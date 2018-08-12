@@ -1,3 +1,5 @@
+# Add analytics with Innocraft Matomo open source tools? https://www.innocraft.cloud
+
 # This script creates the user interface for the Shiny application.
 
 library(shiny)
@@ -21,8 +23,15 @@ generatePanel <- function(type, title, content){
 }
 
 generateBlockquote <- function(words, origin){
-  tags$blockquote(class = "blockquote-reverse", tags$p(words), tags$small(origin))
+  HTML(paste0(tags$hr(), tags$blockquote(class = "blockquote-reverse", tags$p("\"", words, "\""), tags$small(origin))))
 }
+
+generateLabel <- function(type, label_text){
+  # Types: default (grey), primary (orange), success (green), danger (red), warning (yellow), info (purple)
+  tags$span(class = paste0("label label-", type), label_text)
+}
+
+# USE STACKED PROGRESS BAR FOR DATA QUALITY?
 
 # Define UI for application that draws a histogram
 shinyUI(
@@ -89,9 +98,11 @@ shinyUI(
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Gross Domestic Product; economic growth"),
+                                          h1("Economic growth"),
                                           leafletOutput("econ_world"),
+                                          h2("How has Gross Domestic Product evolved (per capita)?"),
                                           plotlyOutput("gdp_plot"),
+                                          h2("How has equality evolved?"),
                                           plotlyOutput("gini_plot")),
                                    column(1)
                                  )),
@@ -101,7 +112,9 @@ shinyUI(
                                    column(10,
                                           h1("Human Development Index"),
                                           leafletOutput("hdi_world"),
+                                          h2("How healthy, educated and wealthy are we?"),
                                           plotlyOutput("hdi_plot"),
+                                          h2("What effect has this had on our ecology?"),
                                           plotlyOutput("hdi_fp_plot")),
                                    column(1)
                                  )),
@@ -111,7 +124,9 @@ shinyUI(
                                    column(10,
                                           h1("Ecological Footprint"),
                                           leafletOutput("fp_world"),
+                                          h2("How do our capacity and consumption compare?"),
                                           plotlyOutput("fp_plot"),
+                                          h2("How happy is this consumption making us?"),
                                           plotlyOutput("fp_wh_plot")),
                                    column(1)
                                  )),
@@ -121,29 +136,40 @@ shinyUI(
                                    column(10,
                                           h1("Happiness and well-being"),
                                           leafletOutput("h_world"),
+                                          h2("How happy do people report they are?"),
                                           plotlyOutput("h_plot"),
-                                          plotlyOutput("h_wb_plot")),
+                                          h2("What impact does that have?"),
+                                          plotlyOutput("h_fp_plot")),
                                    column(1)
                                  )),
                         tabPanel("- Social Progress Index",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Social Progress Index")),
+                                          h1("Social Progress Index"),
+                                          leafletOutput("sp_world"),
+                                          h2("A mor enuanced view"),
+                                          plotlyOutput("sp_plot")),
                                    column(1)
                                  )),
                         tabPanel("- Social Development Goals",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Social Development Goals Index")),
+                                          h1("Social Development Goals Index"),
+                                          leafletOutput("sdg_world"),
+                                          h2("Are we achieving our goals?"),
+                                          plotlyOutput("sdg_plot")),
                                    column(1)
                                  )),
                         tabPanel("- Happy Planet Index",
                                  fluidRow(
                                    column(1),
                                    column(10,
-                                          h1("Happy Planet Index")),
+                                          h1("Happy Planet Index"),
+                                          leafletOutput("hpi_world"),
+                                          h2("Can we be happy within boundries?"),
+                                          plotlyOutput("hpi_plot")),
                                    column(1)
                                  )),
                         tabPanel("Metrics insights",
@@ -154,7 +180,8 @@ shinyUI(
                                           h2("From human-centric to integrated"),
                                           h2("From local to global"),
                                           h2("From moment to beyond generations"),
-                                          h2("From state to (re)generative capacity")),
+                                          h2("From state to (re)generative capacity"),
+                                          generateBlockquote("The two major challenges for the 21st century are to improve the economic situation of the majority and save as much of the planet as we can.", "E. O. Wilson")),
                                    column(1)
                                  ))
                         ), # End of navbarMenu "Research"
@@ -162,7 +189,53 @@ shinyUI(
                       fluidRow(
                         column(1),
                         column(10,
-                               h1("Analyses of combined data")),
+                               h1("Analyses of combined data"),
+                               p("While there still is debate on what data science actually comprises, we find the insights from Provost & Fawcetts book ", tags$i("Data Science for Business"), "(2013) helpful. One would start with business questions and identify the corresponding data analyses techniques and algorithms to apply. We have already identified a number of guiding questions and as this is also an excercise in data science will explore the use of all of these techniques on our merged dataset."),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Classification"),
+                               tags$em("\"Classification and class probability estimation attempt to predict, for each individual in a population, which of a (small) set of classes this individual belongs to.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Regression"),
+                               tags$em("\"Regression (\"value estimation\") attempts to estimate or predict, for each individual, the numerical value of somevariable for that individual.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Similarity matching"),
+                               tags$em("\"Similarity matching attempts to identify similar individuals based on data known about them. Similarity matching can be used to directly to find similar entities.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Clustering"),
+                               tags$em("\"Clustering attempts to group individuals in a population together by their similarity, but not driven by any specific purpose.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Co-occurence grouping"),
+                               tags$em("\"Co-occurence grouping (also known as frequent itemset mining, association rule discovery, and market-based analysis) attempts to find associations between entities based on transactions involving them.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Profiling"),
+                               tags$em("\"Profiling (also known as behavior description) attempts to characterise the typical behavior of an individual, group, or population.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Link prediction"),
+                               tags$em("\"Link prediction attempts to predict connections between data items, usually by suggesting that a link should exist, and possibly also estimating the strength of the link.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Data reduction"),
+                               tags$em("\"Data reduction attempts to take a large set of data and replace it with a smaller set of data that contains much of the important information in the larger set.\""),
+                               p("Result"),
+                               h2("QUESTION"),
+                               p("Elaboration"),
+                               h3("Causal modeling"),
+                               tags$em("\"Causal modeling attempts to help us understand what events or actions actually influence others.\""),
+                               p("Result")),
                         column(1)
                       )),
              navbarMenu("Life's Principles",
@@ -176,7 +249,7 @@ shinyUI(
                                           p("Life has evolved to thrive in the same conditions that we face. Recognising that the organisms that surround us hold some experience we could learn from, biomimicry is a meme that covers our relationship with nature, our connection with nature and our pursuit to design using her insights.")),
                                    column(4,
                                           tags$br(), tags$br(),
-                                          tags$img(src = "biomimicry/Biomimicry38_DesignLens_Diagram_Only_Essential_Elements_RGB.png", width = "338px", height = "338px", align = "right")),
+                                          tags$img(src = "biomimicry/Biomimicry38_DesignLens_Diagram_Only_Essential_Elements_RGB.png", width = "300px", height = "300px", align = "right")),
                                  column(1)
                                  ),
                                  fluidRow(
@@ -186,7 +259,7 @@ shinyUI(
                                           p("The Biomimicry Thinking process is a design method that incorporates knowledge from organisms and best practices from nature.")),
                                    column(4,
                                           tags$br(), tags$br(),
-                                          tags$img(src = "biomimicry/Biomimicry38_DesignLens_Diagram_Only_Biomimicry_Thinking_RGB.png", width = "338px", height = "338px", align = "right")),
+                                          tags$img(src = "biomimicry/Biomimicry38_DesignLens_Diagram_Only_Biomimicry_Thinking_RGB.png", width = "300px", height = "300px", align = "right")),
                                    column(1)
                                  ),
                                  fluidRow(
@@ -196,7 +269,7 @@ shinyUI(
                                           p("Life's principles are patterns of solutions that all organisms embody to some degree and can be seen as 'best practices' from 3.8 biollion years of evolution. Life's Principles can be used as design guidelines to ensure the pursuit of sustainable solutions, as well as measures to evaluate against.")),
                                    column(4,
                                           tags$br(), tags$br(),
-                                          tags$img(src = "biomimicry/Biomimicry38_DesignLens_Diagram_Only_Lifes_Principles_Top6_RGB.png", width = "338px", height = "338px", align = "right")),
+                                          tags$img(src = "biomimicry/Biomimicry38_DesignLens_Diagram_Only_Lifes_Principles_Top6_RGB.png", width = "300px", height = "300px", align = "right")),
                                    column(1)
                                  ),
                                  fluidRow(
@@ -405,9 +478,24 @@ shinyUI(
                                           h3("At what point does GDP growth hinder other factors?"),
                                           h3("To what degree is our dependence on ecosystem services acknowledged?"),
                                           h3("What if we move beyond human-centered measures?"),
-                                          h3("Can patterns in nature be of value for progress evaluation?")),
+                                          h3("Can patterns in nature be of value for progress evaluation?"),
+                                          generateBlockquote("There is a sufficiency in the world for man's need but not for man's greed.", "Mahatma Gahdhi")),
                                    column(1)
                                  )),
+                        tabPanel("Roadmap",
+                                 fluidRow(
+                                   column(1),
+                                   column(10,
+                                          h1("Tentative roadmap"),
+                                          h2("Reviewing and questioning current recent metrics"),
+                                          h2("Gathering and merging data to compare metrics"),
+                                          h2("Analysing country performace using merged data"),
+                                          h2("Exploring the use of Life's Principles as metrics"),
+                                          h2("Creating a new Natural Progress Indicator"),
+                                          generateBlockquote("Everyone has a spirit that can be refined, a body that can be trained in some manner, a suitable path to follow. You are here to realize your inner divinity and manifest your innate enlightenment.", "Morihei Ueshiba")),
+                                   column(1)
+                                 )
+                        ),
                         tabPanel("Data quality",
                                  fluidRow(
                                    column(1),
@@ -428,9 +516,9 @@ shinyUI(
                                           tags$a(href = "http://hdr.undp.org/en/humandev", tags$img(src = "HDI-f-logo.png")),
                                           h3("World Happiness Report"),
                                           p("Happiness Data was obtained from the World Happiness Report 2018."),
-                                          tags$a(href = "http://worldhappiness.report/ed/2018/", tags$img(src = "whr-cover-2018.png")),
+                                          tags$a(href = "http://worldhappiness.report/ed/2018/", tags$img(src = "whr-cover-2018.png", width = "150px")),
                                           h3("Social Progress Index"),
-                                          tags$a(href = "http://www.socialprogressindex.com", tags$img(src = "SPI_logo_for_web_footer_2.png")),
+                                          tags$a(href = "http://www.socialprogressindex.com", tags$img(src = "SPI_logo_for_web_footer_2.png", width = "150px")),
                                           h3("Ecological Footprint"),
                                           tags$a(href = "http://data.footprintnetwork.org/", tags$img(src = "Global Footprint Network-logo-blue.svg", width = "250px")),
                                           h3("Happy Planet Index"),
@@ -440,7 +528,8 @@ shinyUI(
                                           h2("Merging data"),
                                           p("Data was obtained through a combination of API calls and document downloads and merged for the use in the application."),
                                           p("Challenges in data wrangling were the use of different country identifyers..."),
-                                          p("How can we write checks to confirmed merged data corresponds to the sources?")),
+                                          p("How can we write checks to confirmed merged data corresponds to the sources?"),
+                                          generateBlockquote("We think sometimes that poverty is only being hungry, naked and homeless. The poverty of being unwanted, unloved and uncared for is the greatest poverty. We must start in our own homes to remedy this kind of poverty.", "Mother Teresa")),
                                    column(1)
                                  )),
                         tabPanel("Design choices",
@@ -458,7 +547,8 @@ shinyUI(
                                           h2("Inicator comparisons"),
                                           p("Should we compare absolute numbers or relative (normalized) scores? How do we help people to make sense of the units? To what degree do we want to instill a sense of (subjective) urgency?"),
                                           h2("Plot scales"),
-                                          p("Are people biased to see rising graph as something good? How to deal with that?")),
+                                          p("Are people biased to see rising graph as something good? How to deal with that?"),
+                                          generateBlockquote("In order to carry a positive action we must develop here a positive vision.", "Dalai Lama")),
                                    column(1)
                                  )),
                         tabPanel("Open Source",
@@ -466,14 +556,20 @@ shinyUI(
                                    column(1),
                                    column(10,
                                           h1("Open Source"),
+                                          p("We believe open source contributes to accountability and innovation and thus make our results available for others to scrutinize and build upon."),
                                           h2("Code on GitHub"),
                                           p("The code for the data gathering and wrangling and R Shiny app is available on GitHub:"),
                                           tags$br(),
                                           tags$br(),
                                           tags$a(href = "https://github.com/codrin-kruijne/liveso", tags$img(src = "GitHub-Mark-120px-plus.png", width = "120")),
-                                          h2("Data on ..."),
+                                          h2("Data on Data.World"),
                                           p("We are exploring the use of Data.World to make data gathered available"),
-                                          tags$a(href = "https://data.world/", tags$img(src = "DataWorld-logo.png", width = "120"))),
+                                          tags$a(href = "https://data.world/", tags$img(src = "DataWorld-logo.png", width = "120")),
+                                          p("Should we use ", tags$a(href = "https://theodi.org/", "Open Data Institute standars?")),
+                                          h2("Libre tools"),
+                                          p("Analysis is done using the R language in R Studio and the application is built in Shiny."),
+                                          p("We are exploring the use of H2O.ai for machine learning analyses."),
+                                          generateBlockquote("Human progress is neither automatic nor inevitable... Every step toward the goal of justice requires sacrifice, suffering, and struggle; the tireless exertions and passionate concern of dedicated individuals.", "Martin Luther King, Jr.")),
                                    column(1)
                                  )),
                         tabPanel("Developers",
@@ -486,7 +582,7 @@ shinyUI(
                                           tags$br(),
                                           tags$br(),
                                           tags$a(href = "https://www.datacamp.com/profile/codrinkruijne", tags$img(src = "DataCampLogo.png", width = "252")),
-                                          generateBlockquote("O so wise words", "o wise one")),
+                                          generateBlockquote("Truth is a pathless land.", "Krishnamurti")),
                                    column(1)
                                  ))
                         ), # end of navbarMenu "About",
