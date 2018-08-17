@@ -6,10 +6,6 @@ library(readxl)
 library(httr)
 library(sf)
 library(countrycode)
-library(data.world)
-
-# Data.World connection
-data.world::set_config(save_config(auth_token = "DW_ADMIN_TOKEN"))
 
 # Natural Earth country polygons
 ne_countries <- st_read("Sources/Natural Earth/Large scale 110m/ne_110m_admin_0_countries.shp")
@@ -168,12 +164,20 @@ saveRDS(HPI, "liveso/data/hpi_data.rds")
 saveRDS(SDG, "liveso/data/sdg_data.rds")
 saveRDS(fp_data, "liveso/data/fp_data.rds")
 
-# Data.World Publishing trial
-
-# write.csv(fp_data, "dataworld_liveso.csv")
-# file_request <- file_create_request(file_name = "liveso.csv",
-#                                     url = "dataworld_liveso.csv",
-#                                     description = "liveso data merged")
+# Data.World connection
+# library(data.world)
+# 
+# data.world::set_config(save_config(auth_token = "ADMIN_TOKEN"))
+# 
+# intro_dataset <- dwapi::get_dataset(
+#   dataset = "https://data.world/jonloyens/an-intro-to-dataworld-dataset")
+# 
+# # Writing data to Data.World
+# 
+# write.csv(full_df, "dataworld_liveso.csv")
+# file_request <- file_create_or_update_request(file_name = "liveso.csv",
+#                                               url = "dataworld_liveso.csv",
+#                                               description = "liveso data merged")
 # replace_request <- dataset_replace_request(title = "liveso dataset title",
 #                                            visibility = "PRIVATE",
 #                                            description = "R description",
